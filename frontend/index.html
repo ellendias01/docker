@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro de Usuários | Sistema</title>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #3f37c9;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --success: #4cc9f0;
+      --danger: #f72585;
+      --border-radius: 12px;
+      --box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f5f7ff;
+      color: var(--dark);
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-top: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: #6c757d;
+      font-size: 1.1rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #495057;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #ced4da;
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+      background-color: #f8f9fa;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      background-color: white;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .btn-block {
+      display: flex;
+      width: 100%;
+    }
+
+    .users-list {
+      list-style: none;
+    }
+
+    .user-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem;
+      border-bottom: 1px solid #e9ecef;
+      transition: var(--transition);
+    }
+
+    .user-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    .user-item:last-child {
+      border-bottom: none;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 0.25rem;
+    }
+
+    .user-email {
+      color: #6c757d;
+      font-size: 0.875rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background-color: var(--primary);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: var(--transition);
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast-success {
+      background-color: #4bb543;
+    }
+
+    .toast-error {
+      background-color: var(--danger);
+    }
+
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .container {
+        padding: 1rem;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="animate-in">
+      <h1>Cadastro de Usuários</h1>
+      <p class="subtitle">Gerencie os usuários do sistema</p>
+    </header>
+
+    <main>
+      <section class="card animate-in delay-1">
+        <h2 style="margin-bottom: 1.5rem;">Adicionar Novo Usuário</h2>
+        <form id="form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="nome">Nome Completo</label>
+              <input type="text" id="nome" class="form-control" placeholder="Digite o nome" required>
+            </div>
+            <div class="form-group">
+              <label for="email">E-mail</label>
+              <input type="email" id="email" class="form-control" placeholder="Digite o e-mail" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">
+            <span>Cadastrar Usuário</span>
+          </button>
+        </form>
+      </section>
+
+      <section class="card animate-in delay-2">
+        <h2 style="margin-bottom: 1.5rem;">Usuários Cadastrados</h2>
+        <ul id="lista" class="users-list">
+          <!-- Os usuários serão listados aqui via JavaScript -->
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast">
+    <span id="toast-message"></span>
+  </div>
+
+  <script>
+    // Função para mostrar toast
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      
+      toast.className = 'toast';
+      toast.classList.add('show');
+      toast.classList.add(`toast-${type}`);
+      toastMessage.textContent = message;
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    async function listar() {
+      try {
+        const res = await fetch('http://localhost:8261/usuarios');
+        const usuarios = await res.json();
+        const lista = document.getElementById('lista');
+        lista.innerHTML = '';
+        
+        usuarios.forEach(u => {
+          const li = document.createElement('li');
+          li.className = 'user-item';
+          li.innerHTML = `
+            <div class="user-info">
+              <span class="user-name">${u.nome}</span>
+              <span class="user-email">${u.email}</span>
+            </div>
+          `;
+          lista.appendChild(li);
+        });
+      } catch (error) {
+        showToast('Erro ao carregar usuários', 'error');
+        console.error('Erro:', error);
+      }
+    }
+
+    document.getElementById('form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const nome = document.getElementById('nome').value;
+      const email = document.getElementById('email').value;
+      
+      try {
+        const response = await fetch('http://localhost:8261/usuarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email })
+        });
+        
+        if (response.ok) {
+          showToast('Cadastro realizado com sucesso!');
+          document.getElementById('nome').value = '';
+          document.getElementById('email').value = '';
+          await listar();
+        } else {
+          showToast('Erro ao cadastrar usuário', 'error');
+        }
+      } catch (error) {
+        showToast('Erro na conexão com o servidor', 'error');
+        console.error('Erro:', error);
+      }
+    });
+
+    // Carrega a lista inicial
+    listar();
+  </script>
+</body>
+</html>

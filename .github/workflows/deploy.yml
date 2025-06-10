@@ -1,0 +1,50 @@
+name: Deploy Automatizado
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Build da imagem Docker
+        run: docker build -t ellen25/backend ./backend
+
+      - name: Login no Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+      - name: Push da imagem
+        run: docker push ellen25/backend
+
+      - name: SSH no servidor remoto
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker stop backend || true
+            docker rm backend || true
+            docker pull ellen25/backend
+            docker run -d --name backend -p 3000:3000 ellen25/backend
+
+      - name: Análise SonarQube
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker run -d --name sonar -p 9000:9000 sonarqube
+            sleep 30
+            sonar-scanner -Dsonar.projectKey=backend \
+                          -Dsonar.sources=backend/src \
+                          -Dsonar.host.url=http://localhost:9000 \
+                          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            docker stop sonar
+            docker rm sonar
