@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout do código
         uses: actions/checkout@v3
@@ -44,8 +45,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             docker run --rm \
-              -e SONAR_HOST_URL="http://host.docker.internal:8263" \
-              -e SONAR_TOKEN="$SONAR_TOKEN" \
+              -e SONAR_HOST_URL="http://localhost:8263" \
+              -e SONAR_LOGIN="$SONAR_TOKEN" \
               -v /home/aluno/docker/backend:/usr/src \
               sonarsource/sonar-scanner-cli \
               -Dsonar.projectKey=backend \
