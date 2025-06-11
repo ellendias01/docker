@@ -44,15 +44,12 @@ jobs:
 
       - name: Rodar análise SonarQube
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           host: 201.23.3.86
           username: aluno
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-<<<<<<< HEAD
-          env:
-            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-=======
->>>>>>> 53fc29f602a4627bcad1d1d464cefb5ed1ac27be
           script: |
             docker run --rm \
               -e SONAR_HOST_URL="http://localhost:8263" \
@@ -61,12 +58,7 @@ jobs:
               sonarsource/sonar-scanner-cli \
               -Dsonar.projectKey=backend \
               -Dsonar.sources=.
-<<<<<<< HEAD
-=======
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      
->>>>>>> 53fc29f602a4627bcad1d1d464cefb5ed1ac27be
+
 
       - name: Parar SonarQube
         uses: appleboy/ssh-action@v1.0.0
