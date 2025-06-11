@@ -2,12 +2,11 @@ name: Deploy Automatizado
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout do código
         uses: actions/checkout@v3
@@ -16,21 +15,12 @@ jobs:
         run: docker build -t ellen25/backend ./backend
 
       - name: Login no Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Push da imagem para o Docker Hub
         run: docker push ellen25/backend
 
-      - name: Copiar código para o servidor
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: 201.23.3.86
-          username: aluno
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "./backend"
-          target: "/home/aluno"
-
-      - name: Subir SonarQube no servidor
+      - name: Subir SonarQube e clonar repositório no servidor remoto
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: 201.23.3.86
@@ -41,8 +31,10 @@ jobs:
             docker rm sonar || true
             docker run -d --name sonar -p 8263:9000 sonarqube
             sleep 40
+            rm -rf /home/aluno/docker
+            git clone --branch main https://github.com/ellendias01/docker.git /home/aluno/docker
 
-      - name: Rodar análise SonarQube
+      - name: Executar análise SonarQube
         uses: appleboy/ssh-action@v1.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -52,25 +44,25 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             docker run --rm \
-              -e SONAR_HOST_URL="http://localhost:8263" \
-              -e SONAR_LOGIN="$SONAR_TOKEN" \
-              -v /home/aluno/backend:/usr/src \
+              -e SONAR_HOST_URL="http://host.docker.internal:8263" \
+              -e SONAR_TOKEN="$SONAR_TOKEN" \
+              -v /home/aluno/docker/backend:/usr/src \
               sonarsource/sonar-scanner-cli \
               -Dsonar.projectKey=backend \
-              -Dsonar.sources=.
+              -Dsonar.sources=. \
+              -Dsonar.qualitygate.wait=true
 
-
-      - name: Parar SonarQube
+      - name: Parar container SonarQube no servidor
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: 201.23.3.86
           username: aluno
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker stop sonar
-            docker rm sonar
+            docker stop sonar || true
+            docker rm sonar || true
 
-      - name: Deploy (caso análise ok)
+      - name: Deploy remoto da aplicação (se análise passar)
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: 201.23.3.86
