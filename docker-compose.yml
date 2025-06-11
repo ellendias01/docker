@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: mysql:5.7
@@ -12,31 +10,38 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - app-net     
+      - app-net
 
   backend:
     build: ./backend
+    container_name: backend
     ports:
       - "8261:3000"
     depends_on:
       - db
     networks:
       - app-net
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: senha123
+      DB_NAME: usuarios_db
 
   frontend:
     image: nginx:alpine
+    container_name: frontend
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
     ports:
       - "8260:80"
     networks:
-      - app-net     
+      - app-net
 
   sonarqube:
     image: sonarqube:community
     container_name: sonarqube
     ports:
-      - "8263:9000"  # Porta externa 8263 → interna 9000
+      - "8263:9000"
     environment:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
     networks:
