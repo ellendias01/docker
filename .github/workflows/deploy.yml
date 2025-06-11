@@ -18,10 +18,58 @@ jobs:
       - name: Login no Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
-      - name: Push da imagem
+      - name: Push da imagem para o Docker Hub
         run: docker push ellen25/backend
 
-      - name: SSH no servidor remoto
+      - name: Copiar código para o servidor
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./backend"
+          target: "/home/aluno"
+
+      - name: Subir SonarQube no servidor
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker stop sonar || true
+            docker rm sonar || true
+            docker run -d --name sonar -p 8263:9000 sonarqube
+            sleep 40
+
+      - name: Rodar análise SonarQube
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          env:
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          script: |
+            docker run --rm \
+              -e SONAR_HOST_URL="http://localhost:8263" \
+              -e SONAR_LOGIN="$SONAR_TOKEN" \
+              -v /home/aluno/backend:/usr/src \
+              sonarsource/sonar-scanner-cli \
+              -Dsonar.projectKey=backend \
+              -Dsonar.sources=.
+
+      - name: Parar SonarQube
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker stop sonar
+            docker rm sonar
+
+      - name: Deploy (caso análise ok)
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: 201.23.3.86
@@ -31,20 +79,4 @@ jobs:
             docker stop backend || true
             docker rm backend || true
             docker pull ellen25/backend
-            docker run -d --name backend -p 3000:3000 ellen25/backend
-
-      - name: Análise SonarQube
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: 201.23.3.86
-          username: aluno
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker run -d --name sonar -p 9000:9000 sonarqube
-            sleep 30
-            sonar-scanner -Dsonar.projectKey=backend \
-                          -Dsonar.sources=backend/src \
-                          -Dsonar.host.url=http://localhost:9000 \
-                          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-            docker stop sonar
-            docker rm sonar
+            docker run -d --name backend -p 8261:3000 ellen25/backend

@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const app = express();
 const port = 3000;
@@ -8,8 +9,9 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());
 
+// Conexão com o banco de dados MySQL
 const db = mysql.createConnection({
-  host: 'db',
+  host: 'db', // ou 'localhost' se estiver rodando localmente sem Docker
   user: 'root',
   password: 'senha123',
   database: 'usuarios_db',
@@ -24,6 +26,7 @@ db.connect(err => {
   console.log('Conectado ao MySQL!');
 });
 
+// Rotas CRUD de usuários
 app.get('/usuarios', (req, res) => {
   db.query('SELECT * FROM usuarios', (err, results) => {
     if (err) return res.status(500).json(err);
@@ -54,6 +57,42 @@ app.delete('/usuarios/:id', (req, res) => {
   });
 });
 
+// Rota de callback do GitHub OAuth
+app.get('/oauth2/callback/github', async (req, res) => {
+  const code = req.query.code;
+
+  if (!code) {
+    return res.status(400).send('Código não fornecido');
+  }
+
+  try {
+    const response = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: 'SEU_CLIENT_ID',
+        client_secret: 'SEU_CLIENT_SECRET',
+        code: code,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.access_token) {
+      res.send(`Token de acesso recebido com sucesso: ${data.access_token}`);
+    } else {
+      res.status(500).send('Erro ao obter token');
+    }
+  } catch (error) {
+    console.error('Erro ao trocar código por token:', error);
+    res.status(500).send('Erro no servidor');
+  }
+});
+
+// Inicia o servidor
 app.listen(port, () => {
-  console.log(`Servidor rodando na porta ${port}`);
+  console.log(`Servidor rodando em http://localhost:${port}`);
 });
