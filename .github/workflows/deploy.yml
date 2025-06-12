@@ -15,11 +15,17 @@ jobs:
       - name: Build da imagem Docker
         run: docker build -t ellen25/backend ./backend
 
+      - name: Build da imagem Docker do frontend
+        run: docker build -t ellen25/frontend ./frontend
+
       - name: Login no Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
       - name: Push da imagem para o Docker Hub
         run: docker push ellen25/backend
+
+      - name: Push da imagem do frontend para o Docker Hub
+        run: docker push ellen25/frontend
 
       - name: Copiar código para o servidor
         uses: appleboy/scp-action@v0.1.4
@@ -40,7 +46,15 @@ jobs:
             docker stop sonar || true
             docker rm sonar || true
             docker run -d --name sonar -p 8263:9000 sonarqube
-            sleep 40
+            echo "Aguardando SonarQube iniciar..."
+            for i in {1..30}; do
+              if curl -s http://localhost:9000 > /dev/null; then
+                echo "SonarQube está pronto!"
+                break
+              fi
+              echo "Aguardando..."
+              sleep 5
+            done
             rm -rf /home/aluno/backend
             git clone --branch main https://github.com/ellen25/backend.git /home/aluno/backend
 
@@ -83,3 +97,15 @@ jobs:
             docker rm backend || true
             docker pull ellen25/backend
             docker run -d --name backend -p 8261:3000 ellen25/backend
+
+      - name: Deploy frontend
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker stop frontend || true
+            docker rm frontend || true
+            docker pull ellen25/frontend
+            docker run -d --name frontend -p 80:3000 ellen25/frontend
