@@ -294,7 +294,7 @@
 
     async function listar() {
       try {
-        const res = await fetch('http://localhost:8261/usuarios');
+        const res = await fetch('http://201.23.3.86:8261/usuarios');
         const usuarios = await res.json();
         const lista = document.getElementById('lista');
         lista.innerHTML = '';
@@ -322,7 +322,7 @@
       const email = document.getElementById('email').value;
       
       try {
-        const response = await fetch('http://localhost:8261/usuarios', {
+        const response = await fetch('http://201.23.3.86:8261/usuarios', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nome, email })
