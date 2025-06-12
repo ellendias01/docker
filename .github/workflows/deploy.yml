@@ -56,7 +56,7 @@ jobs:
               sleep 5
             done
             rm -rf /home/aluno/backend
-            git clone --branch main https://github.com/ellen25/backend.git /home/aluno/backend
+            git clone --branch main https://github.com/ellen25/docker.git /home/aluno/backend
 
       - name: Rodar análise SonarQube
         uses: appleboy/ssh-action@v1.0.0
