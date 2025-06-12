@@ -1,4 +1,4 @@
-name: Deploy Automatizado
+name: Deploy Automatizado com SonarQube
 
 on:
   push:
@@ -11,6 +11,11 @@ jobs:
     steps:
       - name: Checkout do código
         uses: actions/checkout@v3
+
+      - name: Configurar SSH para deploy
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Build da imagem Docker (backend)
         run: docker build -t ellen25/backend ./backend
@@ -27,7 +32,7 @@ jobs:
       - name: Push frontend para Docker Hub
         run: docker push ellen25/frontend
 
-      - name: Copiar código para o servidor
+      - name: Copiar projeto para o servidor
         uses: appleboy/scp-action@v0.1.4
         with:
           host: 201.23.3.86
@@ -38,8 +43,6 @@ jobs:
 
       - name: Subir SonarQube no servidor
         uses: appleboy/ssh-action@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: 201.23.3.86
           username: aluno
@@ -47,7 +50,7 @@ jobs:
           script: |
             docker stop sonar || true
             docker rm sonar || true
-            docker run -d --name sonar -p 8263:9000 sonarqube
+            docker run -d --name sonar -p 9000:9000 sonarqube
             echo "Aguardando SonarQube iniciar completamente..."
             for i in {1..30}; do
               STATUS=$(curl -s http://localhost:9000/api/system/status | grep -oP '"status":"\K[^"]+')
@@ -59,7 +62,7 @@ jobs:
               sleep 5
             done
 
-      - name: Rodar análise SonarQube (backend)
+      - name: Análise SonarQube - Backend
         uses: appleboy/ssh-action@v1.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -78,7 +81,7 @@ jobs:
               -Dsonar.projectKey=backend \
               -Dsonar.sources=.
 
-      - name: Rodar análise SonarQube (frontend)
+      - name: Análise SonarQube - Frontend
         uses: appleboy/ssh-action@v1.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -107,7 +110,7 @@ jobs:
             docker stop sonar || true
             docker rm sonar || true
 
-      - name: Deploy backend
+      - name: Deploy Backend
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: 201.23.3.86
@@ -119,7 +122,7 @@ jobs:
             docker pull ellen25/backend
             docker run -d --name backend -p 8261:3000 ellen25/backend
 
-      - name: Deploy frontend
+      - name: Deploy Frontend
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: 201.23.3.86
