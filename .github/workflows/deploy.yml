@@ -93,7 +93,7 @@ jobs:
           script: |
             docker run --rm \
               --network host \
-              -e SONAR_HOST_URL="http://localhost:9000" \
+              -e SONAR_HOST_URL="http://localhost:8263" \
               -e SONAR_LOGIN="$SONAR_TOKEN" \
               -v /home/aluno/project/frontend:/usr/src \
               -w /usr/src \
