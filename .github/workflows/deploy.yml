@@ -58,14 +58,14 @@ jobs:
           host: 201.23.3.86
           username: aluno
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          docker run --rm \
-          -e SONAR_HOST_URL="http://localhost:8263" \
-          -e SONAR_LOGIN="$SONAR_TOKEN" \
-          -v /home/aluno/backend:/usr/src \
-          sonarsource/sonar-scanner-cli \
-          -Dsonar.projectKey=backend \
-          -Dsonar.sources=.
+          script: |
+            docker run --rm \
+            -e SONAR_HOST_URL="http://localhost:8263" \
+            -e SONAR_LOGIN="$SONAR_TOKEN" \
+            -v /home/aluno/backend:/usr/src \
+            sonarsource/sonar-scanner-cli \
+            -Dsonar.projectKey=backend \
+            -Dsonar.sources=.
 
 
       - name: Parar SonarQube
