@@ -51,10 +51,10 @@ jobs:
           script: |
             docker stop sonar || true
             docker rm sonar || true
-            docker run -d --name sonar -p 9000:9000 sonarqube
+            docker run -d --name sonar -p 8263:9000 sonarqube
             echo "Aguardando SonarQube iniciar completamente..."
             for i in {1..30}; do
-              STATUS=$(curl -s http://localhost:9000/api/system/status | grep -oP '"status":"\K[^"]+')
+              STATUS=$(curl -s http://localhost:8263api/system/status | grep -oP '"status":"\K[^"]+')
               if [ "$STATUS" = "UP" ]; then
                 echo "SonarQube está pronto!"
                 break
@@ -74,7 +74,7 @@ jobs:
           script: |
             docker run --rm \
               --network host \
-              -e SONAR_HOST_URL="http://localhost:9000" \
+              -e SONAR_HOST_URL="http://localhost:8263" \
               -e SONAR_LOGIN="$SONAR_TOKEN" \
               -v /home/aluno/project/backend:/usr/src \
               -w /usr/src \
