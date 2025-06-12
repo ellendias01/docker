@@ -12,11 +12,7 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v3
 
-      - name: Configurar SSH para deploy
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
+      
       - name: Build da imagem Docker (backend)
         run: docker build -t ellen25/backend ./backend
 
@@ -28,6 +24,11 @@ jobs:
 
       - name: Push backend para Docker Hub
         run: docker push ellen25/backend
+        
+      - name: Configurar SSH para deploy
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Push frontend para Docker Hub
         run: docker push ellen25/frontend
