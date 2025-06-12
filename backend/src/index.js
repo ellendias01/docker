@@ -17,7 +17,7 @@ const db = mysql.createConnection({
   database: 'usuarios_db',
   port: 3306
 });
-
+ 
 db.connect(err => {
   if (err) {
     console.error('Erro na conexão com o banco:', err);
