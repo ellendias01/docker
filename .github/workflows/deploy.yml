@@ -75,7 +75,7 @@ jobs:
             docker run --rm \
               --network host \
               -e SONAR_HOST_URL="http://localhost:8263" \
-              -e SONAR_LOGIN="squ_4f5ca59ee34cb5e6f21d56915bcd6cd2015b893f" \
+              -e SONAR_LOGIN=squ_4f5ca59ee34cb5e6f21d56915bcd6cd2015b893f \
               -v /home/aluno/project/backend:/usr/src \
               -w /usr/src \
               sonarsource/sonar-scanner-cli \
