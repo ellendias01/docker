@@ -11,13 +11,13 @@ app.use(express.json());
 
 // Conexão com o banco de dados MySQL
 const db = mysql.createConnection({
-  host: '201.23.3.86', // ou 'localhost' se estiver rodando localmente sem Docker
+  host: 'db', // ou 'localhost' se estiver rodando localmente sem Docker
   user: 'root',
   password: 'senha123',
   database: 'usuarios_db',
   port: 3306
 });
- 
+
 db.connect(err => {
   if (err) {
     console.error('Erro na conexão com o banco:', err);
@@ -93,6 +93,6 @@ app.get('/oauth2/callback/github', async (req, res) => {
 });
 
 // Inicia o servidor
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Servidor rodando em http://0.0.0.0:${port}`);
+app.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`);
 });
