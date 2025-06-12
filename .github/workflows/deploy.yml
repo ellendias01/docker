@@ -12,19 +12,19 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v3
 
-      - name: Build da imagem Docker do backend
+      - name: Build imagem Docker backend
         run: docker build -t ellen25/backend ./backend
 
-      - name: Build da imagem Docker do frontend
+      - name: Build imagem Docker frontend
         run: docker build -t ellen25/frontend ./frontend
 
       - name: Login no Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
-      - name: Push da imagem do backend
+      - name: Push backend para Docker Hub
         run: docker push ellen25/backend
 
-      - name: Push da imagem do frontend
+      - name: Push frontend para Docker Hub
         run: docker push ellen25/frontend
 
       - name: Copiar código para o servidor
@@ -33,11 +33,13 @@ jobs:
           host: 201.23.3.86
           username: aluno
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "./backend"
-          target: "/home/aluno"
+          source: "."
+          target: "/home/aluno/deploy"
 
       - name: Subir SonarQube no servidor
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: 201.23.3.86
           username: aluno
@@ -46,19 +48,19 @@ jobs:
             docker stop sonar || true
             docker rm sonar || true
             docker run -d --name sonar -p 8263:9000 sonarqube
-            echo "Aguardando SonarQube iniciar..."
+
+            echo "Aguardando SonarQube iniciar completamente..."
             for i in {1..30}; do
-              if curl -s http://localhost:9000 > /dev/null; then
+              STATUS=$(curl -s http://localhost:9000/api/system/status | jq -r '.status' || echo "null")
+              if [ "$STATUS" = "UP" ]; then
                 echo "SonarQube está pronto!"
                 break
               fi
-              echo "Aguardando..."
+              echo "Status atual: $STATUS — aguardando..."
               sleep 5
             done
-            rm -rf /home/aluno/backend
-            git clone --branch main https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ellendias01/docker.git /home/aluno/backend
 
-      - name: Rodar análise SonarQube
+      - name: Rodar análise SonarQube do backend
         uses: appleboy/ssh-action@v1.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -68,13 +70,30 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             docker run --rm \
-              --network host \
               -e SONAR_HOST_URL="http://localhost:9000" \
               -e SONAR_LOGIN="$SONAR_TOKEN" \
-              -v /home/aluno/backend:/usr/src \
+              -v /home/aluno/deploy/backend:/usr/src \
               -w /usr/src \
               sonarsource/sonar-scanner-cli \
               -Dsonar.projectKey=backend \
+              -Dsonar.sources=.
+
+      - name: Rodar análise SonarQube do frontend
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          host: 201.23.3.86
+          username: aluno
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker run --rm \
+              -e SONAR_HOST_URL="http://localhost:9000" \
+              -e SONAR_LOGIN="$SONAR_TOKEN" \
+              -v /home/aluno/deploy/frontend:/usr/src \
+              -w /usr/src \
+              sonarsource/sonar-scanner-cli \
+              -Dsonar.projectKey=frontend \
               -Dsonar.sources=.
 
       - name: Parar SonarQube
@@ -84,10 +103,10 @@ jobs:
           username: aluno
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker stop sonar
-            docker rm sonar
+            docker stop sonar || true
+            docker rm sonar || true
 
-      - name: Deploy backend (caso análise ok)
+      - name: Deploy backend
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: 201.23.3.86
