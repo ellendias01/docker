@@ -11,7 +11,7 @@ app.use(express.json());
 
 // Conexão com o banco de dados MySQL
 const db = mysql.createConnection({
-  host: 'db', // ou 'localhost' se estiver rodando localmente sem Docker
+  host: '201.23.3.86', // ou 'localhost' se estiver rodando localmente sem Docker
   user: 'root',
   password: 'senha123',
   database: 'usuarios_db',

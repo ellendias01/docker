@@ -44,8 +44,12 @@ services:
       - "8263:9000"
     environment:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+      - ES_JAVA_OPTS=-Dorg.elasticsearch.cluster.services.ClusterService.DISABLE_DELAY_ALLOCATION=true
     networks:
       - app-net
+    volumes:
+      -/etc/localtime:/etc/localtime:ro
+      -/etc/timezone:/etc/timezone:ro
 
 volumes:
   mysql-data:
