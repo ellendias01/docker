@@ -65,13 +65,12 @@ jobs:
 
       - name: Análise SonarQube - Backend
         uses: appleboy/ssh-action@v1.0.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           host: 201.23.3.86
           username: aluno
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            export SONAR_TOKEN=${{ secrets.SONAR_TOKEN }}
             docker run --rm \
               --network host \
               -e SONAR_HOST_URL="http://localhost:8263" \
@@ -81,6 +80,7 @@ jobs:
               sonarsource/sonar-scanner-cli \
               -Dsonar.projectKey=backend \
               -Dsonar.sources=.
+
 
       - name: Análise SonarQube - Frontend
         uses: appleboy/ssh-action@v1.0.0
