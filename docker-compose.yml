@@ -3,6 +3,7 @@ services:
     image: mysql:5.7
     container_name: mysql-db
     environment:
+      MYSQL_USER: root
       MYSQL_ROOT_PASSWORD: senha123
       MYSQL_DATABASE: usuarios_db
     ports:
