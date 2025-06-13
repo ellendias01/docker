@@ -53,7 +53,7 @@ jobs:
             docker rm sonar || true
             docker run -d --name sonar -p 8263:9000 sonarqube
             echo "Aguardando SonarQube iniciar completamente..."
-            for i in {1..30}; do
+            for i in {1..10}; do
               STATUS=$(curl -s http://localhost:8263/api/system/status | grep -oP '"status":"\K[^"]+')
               if [ "$STATUS" = "UP" ]; then
                 echo "SonarQube está pronto!"

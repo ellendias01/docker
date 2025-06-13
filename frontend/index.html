@@ -296,7 +296,12 @@
       try {
         const res = await fetch('http://201.23.3.86:8261/usuarios');
         const usuarios = await res.json();
+        if (!Array.isArray(usuarios)) {
+      throw new Error('Resposta da API não é uma lista de usuários');
+    }
+
         const lista = document.getElementById('lista');
+        console.log('Resposta da API:', usuarios);
         lista.innerHTML = '';
         
         usuarios.forEach(u => {
